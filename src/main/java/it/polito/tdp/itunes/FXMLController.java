@@ -6,6 +6,12 @@ package it.polito.tdp.itunes;
 
 import java.net.URL;
 import java.util.ResourceBundle;
+
+import org.jgrapht.Graph;
+import org.jgrapht.graph.DefaultEdge;
+import org.jgrapht.graph.SimpleGraph;
+
+import it.polito.tdp.itunes.model.Album;
 import it.polito.tdp.itunes.model.Model;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -17,6 +23,7 @@ import javafx.scene.control.TextField;
 public class FXMLController {
 
 	private Model model;
+	Graph<Album, DefaultEdge> graph;
 	
     @FXML // ResourceBundle that was given to the FXMLLoader
     private ResourceBundle resources;
@@ -34,7 +41,7 @@ public class FXMLController {
     private Button btnSet; // Value injected by FXMLLoader
 
     @FXML // fx:id="cmbA1"
-    private ComboBox<?> cmbA1; // Value injected by FXMLLoader
+    private ComboBox<Album> cmbA1; // Value injected by FXMLLoader
 
     @FXML // fx:id="txtDurata"
     private TextField txtDurata; // Value injected by FXMLLoader
@@ -48,10 +55,36 @@ public class FXMLController {
     @FXML
     void doComponente(ActionEvent event) {
     	
+    	txtResult.clear();
+    	
+    	Album a = this.cmbA1.getValue();
+    	
+    	txtResult.appendText("Componente connessa - "+a.getTitle()+"\n");
+    	txtResult.appendText("dimensione componente = "+ this.model.calcolaConnessa(a)+"\n");
+    	txtResult.appendText("#Album componente = " + this.model.calcolaTrack(a));
+    	
     }
 
     @FXML
     void doCreaGrafo(ActionEvent event) {
+    	txtResult.clear();
+    	
+    	this.graph = new SimpleGraph<>(DefaultEdge.class);
+    	
+    	String durataTxt = txtDurata.getText();
+    	int durata = 0;
+    	
+    	try {
+    		durata = Integer.parseInt(durataTxt);
+    		this.graph = this.model.creaGrafo(durata);
+    		
+    		txtResult.appendText("#VERTICI: "+this.graph.vertexSet().size()+"\n"+"#ARCHI: "+this.graph.edgeSet().size());
+    		
+    	}catch(NumberFormatException e) {
+    		System.out.println("errore nella creazione del grafo");
+    	}
+    	
+    	this.cmbA1.getItems().addAll(this.graph.vertexSet());
     	
     }
 

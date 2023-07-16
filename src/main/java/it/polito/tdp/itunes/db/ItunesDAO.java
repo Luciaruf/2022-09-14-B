@@ -14,6 +14,7 @@ import it.polito.tdp.itunes.model.Genre;
 import it.polito.tdp.itunes.model.MediaType;
 import it.polito.tdp.itunes.model.Playlist;
 import it.polito.tdp.itunes.model.Track;
+import it.polito.tdp.itunes.model.TrackPlaylist;
 
 public class ItunesDAO {
 	
@@ -139,4 +140,84 @@ public class ItunesDAO {
 		}
 		return result;
 	}
+	
+	
+	public List<Album> getVertices(int durata){
+		
+		String sql = "SELECT a.`AlbumId`, a.`ArtistId`, a.`Title`, AVG(t.`Milliseconds`/1000) as durataMedia "
+				+ "FROM album a, track t "
+				+ "WHERE a.`AlbumId`=t.`AlbumId` "
+				+ "GROUP BY a.`AlbumId` "
+				+ "HAVING durataMedia>? ";
+		
+		List<Album> result = new LinkedList<>();
+		
+		try {
+			Connection conn = DBConnect.getConnection();
+			PreparedStatement st = conn.prepareStatement(sql);
+			st.setInt(1, durata);
+			ResultSet res = st.executeQuery();
+
+			while (res.next()) {
+				result.add(new Album(res.getInt("AlbumId"), res.getString("Title"), res.getDouble("durataMedia")));
+			}
+			conn.close();
+		} catch (SQLException e) {
+			e.printStackTrace();
+			throw new RuntimeException("SQL Error");
+		}
+		return result;
+	}
+	
+	public List<TrackPlaylist> getListaPerAlbum(int albumId){
+		String sql = "SELECT pt.`TrackId`, pt.`PlaylistId` "
+				+ "FROM `playlisttrack` pt, album a, track t "
+				+ "WHERE pt.`TrackId`=t.`TrackId` "
+				+ "AND t.`AlbumId`=a.`AlbumId` "
+				+ "AND a.`AlbumId`=?";
+		
+		List<TrackPlaylist> result = new LinkedList<>();
+		
+		try {
+			Connection conn = DBConnect.getConnection();
+			PreparedStatement st = conn.prepareStatement(sql);
+			st.setInt(1, albumId);
+			ResultSet res = st.executeQuery();
+
+			while (res.next()) {
+				result.add(new TrackPlaylist(res.getInt("TrackId"), res.getInt("PlaylistId")));
+			}
+			conn.close();
+		} catch (SQLException e) {
+			e.printStackTrace();
+			throw new RuntimeException("SQL Error");
+		}
+		return result;
+	}
+	
+	public List<Integer> getListaTrack(int albumId){
+		String sql = "SELECT t.trackId as tra "
+				+ "FROM track t, album a "
+				+ "WHERE t.`AlbumId`=a.`AlbumId` "
+				+ "AND a.`AlbumId`=? ";
+		
+		List<Integer> result = new LinkedList<>();
+		
+		try {
+			Connection conn = DBConnect.getConnection();
+			PreparedStatement st = conn.prepareStatement(sql);
+			st.setInt(1, albumId);
+			ResultSet res = st.executeQuery();
+
+			while (res.next()) {
+				result.add(res.getInt("tra"));
+			}
+			conn.close();
+		} catch (SQLException e) {
+			e.printStackTrace();
+			throw new RuntimeException("SQL Error");
+		}
+		return result;
+	}
+	
 }
